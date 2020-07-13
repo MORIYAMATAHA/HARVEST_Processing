@@ -5,9 +5,10 @@ import processing.serial.*;
 
 // The serial port:
 Serial myPort;       
-
+Serial harvest_myPort; //HARVEST
 //user definitions
-String COM_PORT="COM5"; //change this!
+String COM_PORT="COM10"; //change this!
+String COM_PORT_H="COM2";
 
 //software definitions
 final int PC_MBED_MEASURE_REQUEST=0xFE;
@@ -38,6 +39,8 @@ PrintWriter output;
 int[][][]PressureDistribution = new int[FINGER_NUM][SENSOR_X_NUM][SENSOR_Y_NUM];
 float[][] ThermalDistribution = new float[FINGER_NUM][THERMAL_NUM];
 
+//buffer
+int[] power_b = new int[100];
 int FingerSelect = 0;
 
 
@@ -49,6 +52,7 @@ void settings() {
 void setup() {  
   //serial setting
   myPort = new Serial(this, COM_PORT, 921600);
+  //harvest_myPort = new Serial(this,COM_PORT_H, 921600);
   //For mac users
   //myPort = new Serial(this, "/dev/tty.usbmodem1412", 921600);
   myPort.clear();
@@ -95,7 +99,7 @@ void draw() {
 void serialEvent(Serial mp)
 {
   int rcv, x, y, finger, t;
-
+  int power_num = 0;
   //send next request. This request is issued "before" reading serial buffer, to save time of ESP32.
   mp.write(PC_MBED_MEASURE_REQUEST); 
 
@@ -103,8 +107,11 @@ void serialEvent(Serial mp)
   for (x = 0; x<SENSOR_X_NUM; x++) {
     for (y = 0; y<SENSOR_Y_NUM; y++) {
       PressureDistribution[FingerSelect][x][y]= mp.read(); //upper 8bits
+      power_b[power_num] = PressureDistribution[FingerSelect][x][y];
+      power_num++;
     }
   }
+  
   for (x = 0; x<THERMAL_NUM; x++) {
     rcv = mp.read();
     ThermalDistribution[FingerSelect][x] =0.248 * rcv - 16.557; //Calculation by theoretical formula.
