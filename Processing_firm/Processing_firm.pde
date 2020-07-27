@@ -8,13 +8,13 @@ Serial myPort;
 Serial harvest_myPort; //HARVEST
 //user definitions
 String COM_PORT="COM10"; //change this!
-String COM_PORT_H="COM11";
+String COM_PORT_H="COM12";
 
 //software definitions
 final int PC_MBED_MEASURE_REQUEST=0xFE;
 final int MBED_PC_MEASURE_RESULT=0xFF;
 final int FINGER_CHANGE = 0xFD;
-final int VIB_END = 0xFF;
+final byte VIB_END = (byte)0b11111110;
 
 //graphical attributes
 final int WINDOW_SIZE_X=1500;
@@ -107,16 +107,23 @@ void serialEvent(Serial mp)
   for (x = 0; x<SENSOR_X_NUM; x++) {
     for (y = 0; y<SENSOR_Y_NUM; y++) {
       PressureDistribution[FingerSelect][x][y]= mp.read(); //upper 8bits
-      power_b[power_num] = PressureDistribution[FingerSelect][x][y] / 2; //buffer data
+      power_b[power_num] = PressureDistribution[FingerSelect][x][y] / 15; //buffer data
       power_num++;
     }
   }
   
-  int n_x = 0; 
-  for(n_x = 1; n_x < 9; n_x++){
-    harvest_myPort.write(power_b[n_x]);
-  }
-  harvest_myPort.write(VIB_END);
+
+  //for(int n_x = 1; n_x < 9; n_x++){
+    harvest_myPort.write((byte)power_b[1]);
+    harvest_myPort.write((byte)power_b[2]);
+    harvest_myPort.write((byte)power_b[3]);
+    harvest_myPort.write((byte)power_b[4]);
+    harvest_myPort.write((byte)power_b[5]);
+    harvest_myPort.write((byte)power_b[6]);
+    harvest_myPort.write((byte)power_b[7]);
+    harvest_myPort.write((byte)power_b[8]);
+    harvest_myPort.write(VIB_END);
+  //}
   
   
   for (x = 0; x<THERMAL_NUM; x++) {
